@@ -105,10 +105,14 @@ async function mergeStyles() {
 }
 
 async function createPage() {
-  await createDir();
-  await cloneDir();
-  switchTags();
-  mergeStyles();
+  try {
+    await createDir();
+    await cloneDir();
+    switchTags();
+    mergeStyles();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 createPage();
