@@ -1,44 +1,36 @@
-const fs = require('fs');
+const fs = require('fs/promises');
 const path = require('path');
 
 const cloneFolderPath = path.join(__dirname, 'files-copy');
 const authFolderPath = path.join(__dirname, 'files');
 
-function copyDir() {
+async function copyDir() {
   try {
-    fs.mkdir(path.join(cloneFolderPath), { recursive: true }, (err) => {
-      if (err) throw err;
-    });
+    await fs.mkdir(path.join(cloneFolderPath), { recursive: true });
 
-    fs.readdir(path.join(authFolderPath), (err, files) => {
-      if (err) throw err;
+    const files = await fs.readdir(path.join(authFolderPath), (files) => files);
 
-      files.forEach((file) => {
-        fs.copyFile(
-          path.join(authFolderPath, file),
-          path.join(cloneFolderPath, file),
-          (err) => {
-            if (err) return err;
-          },
-        );
-      });
-    });
+    for (const file of files) {
+      await fs.copyFile(
+        path.join(authFolderPath, file),
+        path.join(cloneFolderPath, file),
+      );
+    }
 
-    fs.readdir(path.join(cloneFolderPath), (err, files) => {
-      if (err) throw err;
+    const cloneFiles = await fs.readdir(
+      path.join(cloneFolderPath),
+      (files) => files,
+    );
 
-      files.forEach((file) => {
-        fs.open(path.join(authFolderPath, file), 'r', (err) => {
-          if (err) {
-            if (err.code === 'ENOENT') {
-              fs.unlink(path.join(cloneFolderPath, file), (err) => {
-                if (err) throw err;
-              });
-            }
+    for (const file of cloneFiles) {
+      fs.open(path.join(authFolderPath, file), 'r')
+        .then()
+        .catch((err) => {
+          if (err.code === 'ENOENT') {
+            fs.unlink(path.join(cloneFolderPath, file));
           }
         });
-      });
-    });
+    }
   } catch (err) {
     console.error(err);
   }
